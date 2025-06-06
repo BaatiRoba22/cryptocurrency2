@@ -385,4 +385,391 @@ Try asking: "What do you think about Ethereum?" or "Analyze the market"`;
   );
 };
 
+export default CryptoAdvisorBot;import React, { useState, useEffect, useRef } from 'react';
+import { Send, TrendingUp, TrendingDown, Leaf, Zap, DollarSign, AlertTriangle, Bot, User } from 'lucide-react';
+
+const CryptoAdvisorBot = () => {
+  const [messages, setMessages] = useState([
+    {
+      type: 'bot',
+      content: "Hey there! 👋 I'm your AI-powered crypto sidekick! I analyze cryptocurrency trends and sustainability to help you make smarter investment decisions. Ask me about any crypto or say 'analyze market' for a full overview!",
+      timestamp: new Date()
+    }
+  ]);
+  const [input, setInput] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
+  const messagesEndRef = useRef(null);
+
+  // Mock crypto data with real-world inspired metrics
+  const cryptoData = {
+    bitcoin: {
+      symbol: 'BTC',
+      price: 67500,
+      change24h: 2.4,
+      change7d: -1.2,
+      marketCap: 1330000000000,
+      energyEfficiency: 'Low',
+      sustainabilityScore: 3,
+      adoption: 'High',
+      riskLevel: 'Medium'
+    },
+    ethereum: {
+      symbol: 'ETH',
+      price: 3200,
+      change24h: 3.1,
+      change7d: 5.8,
+      marketCap: 385000000000,
+      energyEfficiency: 'High',
+      sustainabilityScore: 8,
+      adoption: 'High',
+      riskLevel: 'Medium'
+    },
+    cardano: {
+      symbol: 'ADA',
+      price: 0.45,
+      change24h: -0.8,
+      change7d: 12.3,
+      marketCap: 15800000000,
+      energyEfficiency: 'Very High',
+      sustainabilityScore: 9,
+      adoption: 'Medium',
+      riskLevel: 'High'
+    },
+    solana: {
+      symbol: 'SOL',
+      price: 145,
+      change24h: 5.2,
+      change7d: 8.7,
+      marketCap: 65000000000,
+      energyEfficiency: 'High',
+      sustainabilityScore: 7,
+      adoption: 'Medium',
+      riskLevel: 'High'
+    },
+    polygon: {
+      symbol: 'MATIC',
+      price: 0.72,
+      change24h: 1.9,
+      change7d: -3.4,
+      marketCap: 6500000000,
+      energyEfficiency: 'Very High',
+      sustainabilityScore: 8,
+      adoption: 'Medium',
+      riskLevel: 'High'
+    }
+  };
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  const analyzePortfolio = (cryptos) => {
+    const totalValue = cryptos.reduce((sum, crypto) => sum + crypto.marketCap, 0);
+    const avgSustainability = cryptos.reduce((sum, crypto) => sum + crypto.sustainabilityScore, 0) / cryptos.length;
+    const avgRisk = cryptos.every(c => c.riskLevel === 'Medium') ? 'Medium' : 
+                   cryptos.some(c => c.riskLevel === 'High') ? 'High' : 'Low';
+    
+    return { totalValue, avgSustainability, avgRisk };
+  };
+
+  const generateAdvice = (crypto) => {
+    const { price, change24h, change7d, sustainabilityScore, energyEfficiency, riskLevel } = crypto;
+    
+    let profitabilityAdvice = '';
+    let sustainabilityAdvice = '';
+    let overallRecommendation = '';
+    
+    // Profitability analysis
+    if (change24h > 3 && change7d > 5) {
+      profitabilityAdvice = '📈 Strong bullish momentum! Consider taking partial profits or holding.';
+    } else if (change24h > 0 && change7d > 0) {
+      profitabilityAdvice = '📊 Moderate uptrend. Good entry point for gradual accumulation.';
+    } else if (change24h < -3 || change7d < -5) {
+      profitabilityAdvice = '📉 Bearish trend. Consider dollar-cost averaging if you believe in long-term potential.';
+    } else {
+      profitabilityAdvice = '🔄 Sideways movement. Wait for clearer signals or consider other opportunities.';
+    }
+    
+    // Sustainability analysis
+    if (sustainabilityScore >= 8) {
+      sustainabilityAdvice = '🌱 Excellent sustainability! Low environmental impact and strong project fundamentals.';
+    } else if (sustainabilityScore >= 6) {
+      sustainabilityAdvice = '🌿 Good sustainability profile. Reasonable environmental considerations.';
+    } else {
+      sustainabilityAdvice = '⚠️ Lower sustainability score. Consider environmental impact in your investment decision.';
+    }
+    
+    // Overall recommendation
+    const combinedScore = (change7d > 0 ? 1 : 0) + (sustainabilityScore >= 7 ? 1 : 0) + (riskLevel === 'Medium' ? 1 : 0);
+    
+    if (combinedScore >= 2) {
+      overallRecommendation = '✅ RECOMMENDED: Good balance of profitability potential and sustainability.';
+    } else if (combinedScore === 1) {
+      overallRecommendation = '⚖️ NEUTRAL: Mixed signals. Consider your risk tolerance and investment timeline.';
+    } else {
+      overallRecommendation = '❌ CAUTION: High risk or poor recent performance. Only for experienced investors.';
+    }
+    
+    return { profitabilityAdvice, sustainabilityAdvice, overallRecommendation };
+  };
+
+  const processMessage = (userInput) => {
+    const input = userInput.toLowerCase();
+    
+    // Check for specific crypto mentions
+    const cryptoKeys = Object.keys(cryptoData);
+    const mentionedCrypto = cryptoKeys.find(crypto => 
+      input.includes(crypto) || input.includes(cryptoData[crypto].symbol.toLowerCase())
+    );
+    
+    if (mentionedCrypto) {
+      const crypto = cryptoData[mentionedCrypto];
+      const advice = generateAdvice(crypto);
+      
+      return `📊 **${mentionedCrypto.toUpperCase()} (${crypto.symbol}) Analysis**
+
+💰 **Current Price**: $${crypto.price.toLocaleString()}
+📈 **24h Change**: ${crypto.change24h > 0 ? '+' : ''}${crypto.change24h}%
+📅 **7d Change**: ${crypto.change7d > 0 ? '+' : ''}${crypto.change7d}%
+🏛️ **Market Cap**: $${(crypto.marketCap / 1000000000).toFixed(1)}B
+
+**Profitability**: ${advice.profitabilityAdvice}
+
+**Sustainability**: ${advice.sustainabilityAdvice}
+🔋 **Energy Efficiency**: ${crypto.energyEfficiency}
+🌍 **Sustainability Score**: ${crypto.sustainabilityScore}/10
+
+**Risk Level**: ${crypto.riskLevel}
+
+${advice.overallRecommendation}`;
+    }
+    
+    // Market analysis
+    if (input.includes('market') || input.includes('analyze') || input.includes('overview')) {
+      const topPerformers = Object.entries(cryptoData)
+        .sort((a, b) => b[1].change7d - a[1].change7d)
+        .slice(0, 3);
+      
+      const mostSustainable = Object.entries(cryptoData)
+        .sort((a, b) => b[1].sustainabilityScore - a[1].sustainabilityScore)
+        .slice(0, 3);
+      
+      return `🚀 **Market Overview & Recommendations**
+
+📈 **Top 7-Day Performers**:
+${topPerformers.map(([name, data]) => 
+  `• ${name.toUpperCase()} (${data.symbol}): +${data.change7d}%`
+).join('\n')}
+
+🌱 **Most Sustainable Options**:
+${mostSustainable.map(([name, data]) => 
+  `• ${name.toUpperCase()}: ${data.sustainabilityScore}/10 (${data.energyEfficiency} efficiency)`
+).join('\n')}
+
+💡 **My Recommendations**:
+• **Conservative**: Ethereum - Great sustainability + steady growth
+• **Moderate Risk**: Solana - Strong performance + good efficiency  
+• **Eco-Focused**: Cardano - Highest sustainability score
+
+Ask me about any specific crypto for detailed analysis!`;
+    }
+    
+    // Portfolio advice
+    if (input.includes('portfolio') || input.includes('diversify')) {
+      return `🎯 **Smart Portfolio Strategy**
+
+**Recommended Allocation**:
+• 40% - Bitcoin (Store of value, established)
+• 30% - Ethereum (DeFi ecosystem, sustainable)
+• 20% - Sustainable alts (Cardano, Polygon)
+• 10% - High-growth plays (Solana)
+
+**Key Principles**:
+🌱 Balance profitability with sustainability
+⚖️ Diversify across different use cases
+📊 Dollar-cost average during volatility
+🔒 Never invest more than you can lose
+
+Want me to analyze specific cryptos for your portfolio?`;
+    }
+    
+    // Risk management
+    if (input.includes('risk') || input.includes('safe')) {
+      return `🛡️ **Risk Management Tips**
+
+**Lower Risk Options**:
+• Bitcoin & Ethereum (established track records)
+• Focus on coins with high adoption
+• Prioritize sustainable projects
+
+**Risk Factors to Watch**:
+⚠️ High volatility in alt-coins
+⚠️ Regulatory uncertainty
+⚠️ Environmental concerns
+
+**Safety Rules**:
+✅ Start small and learn
+✅ Use reputable exchanges
+✅ Consider sustainability impact
+✅ Set stop-losses for protection
+
+Need specific risk analysis for any crypto?`;
+    }
+    
+    // Default response
+    return `🤖 I can help you with:
+
+📊 **Crypto Analysis** - Ask about Bitcoin, Ethereum, Cardano, Solana, or Polygon
+🏢 **Market Overview** - Say "analyze market" for top picks
+📈 **Portfolio Advice** - Ask about "portfolio" or "diversify"
+🛡️ **Risk Management** - Ask about "risk" or "safety"
+
+Try asking: "What do you think about Ethereum?" or "Analyze the market"`;
+  };
+
+  const handleSend = async () => {
+    if (!input.trim()) return;
+    
+    const userMessage = {
+      type: 'user',
+      content: input,
+      timestamp: new Date()
+    };
+    
+    setMessages(prev => [...prev, userMessage]);
+    setInput('');
+    setIsTyping(true);
+    
+    // Simulate typing delay
+    setTimeout(() => {
+      const botResponse = {
+        type: 'bot',
+        content: processMessage(input),
+        timestamp: new Date()
+      };
+      
+      setMessages(prev => [...prev, botResponse]);
+      setIsTyping(false);
+    }, 1000 + Math.random() * 1000);
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 p-4">
+      <div className="max-w-4xl mx-auto bg-white/10 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/20 overflow-hidden">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-6 text-white">
+          <div className="flex items-center gap-3">
+            <div className="bg-white/20 p-3 rounded-full">
+              <Bot className="w-8 h-8" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold">Crypto AI Advisor</h1>
+              <p className="text-blue-100">Your First AI-Powered Financial Sidekick! 🌟</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Messages */}
+        <div className="h-96 overflow-y-auto p-6 space-y-4">
+          {messages.map((message, index) => (
+            <div
+              key={index}
+              className={`flex gap-3 ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
+            >
+              {message.type === 'bot' && (
+                <div className="bg-gradient-to-r from-blue-500 to-purple-500 p-2 rounded-full flex-shrink-0">
+                  <Bot className="w-5 h-5 text-white" />
+                </div>
+              )}
+              <div
+                className={`max-w-xs lg:max-w-md px-4 py-3 rounded-2xl ${
+                  message.type === 'user'
+                    ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white'
+                    : 'bg-white/80 text-gray-800'
+                }`}
+              >
+                <div className="whitespace-pre-wrap text-sm leading-relaxed">
+                  {message.content}
+                </div>
+                <div className="text-xs opacity-70 mt-2">
+                  {message.timestamp.toLocaleTimeString()}
+                </div>
+              </div>
+              {message.type === 'user' && (
+                <div className="bg-gradient-to-r from-green-500 to-blue-500 p-2 rounded-full flex-shrink-0">
+                  <User className="w-5 h-5 text-white" />
+                </div>
+              )}
+            </div>
+          ))}
+          
+          {isTyping && (
+            <div className="flex gap-3 justify-start">
+              <div className="bg-gradient-to-r from-blue-500 to-purple-500 p-2 rounded-full">
+                <Bot className="w-5 h-5 text-white" />
+              </div>
+              <div className="bg-white/80 px-4 py-3 rounded-2xl">
+                <div className="flex space-x-1">
+                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                </div>
+              </div>
+            </div>
+          )}
+          <div ref={messagesEndRef} />
+        </div>
+
+        {/* Input */}
+        <div className="p-6 border-t border-white/10">
+          <div className="flex gap-3">
+            <input
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder="Ask me about crypto investments..."
+              className="flex-1 px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+            <button
+              onClick={handleSend}
+              disabled={!input.trim()}
+              className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 disabled:opacity-50 disabled:cursor-not-allowed p-3 rounded-xl transition-all duration-200 transform hover:scale-105"
+            >
+              <Send className="w-5 h-5 text-white" />
+            </button>
+          </div>
+          
+          {/* Quick Actions */}
+          <div className="flex flex-wrap gap-2 mt-4">
+            {['Analyze Market', 'Portfolio Tips', 'What about Bitcoin?', 'Risk Management'].map((suggestion) => (
+              <button
+                key={suggestion}
+                onClick={() => {
+                  setInput(suggestion);
+                  setTimeout(handleSend, 100);
+                }}
+                className="px-3 py-1 bg-white/10 hover:bg-white/20 text-white text-sm rounded-full border border-white/20 transition-all duration-200"
+              >
+                {suggestion}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export default CryptoAdvisorBot;
